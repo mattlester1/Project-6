@@ -26,15 +26,15 @@ int incomingByte = 0;
 
 float eror_integ = 0.0;
 
-float ref_theta;
-float motor_theta;
-float thetaError = 0;
-float oldError = 0;
+volatile float ref_theta;
+volatile float motor_theta;
+volatile float thetaError = 0;
+volatile float oldError = 0;
 
-float k_p = 10;
-float p_control;
-float k_i = .1;
-float i_control;
+float k_p = 5;
+volatile float p_control = 0;
+float k_i = .01;
+volatile float i_control = 0;
 int oldTime;
 int newTime;
 int deltaT;
@@ -74,6 +74,7 @@ void setup()
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
   delay(100);
+  // ref_theta = processIMUAngle(); 
 }
 
 void loop()
@@ -139,7 +140,7 @@ float readMotorAngle()
 
 float PI_Control(){
   newTime = millis();
-  ref_theta = processIMUAngle();
+  // ref_theta = processIMUAngle();
   motor_theta = readMotorAngle();
 
   thetaError = ref_theta - motor_theta;
@@ -149,7 +150,7 @@ float PI_Control(){
   oldError = thetaError;
 
   newTime = millis();
-  ref_theta = processIMUAngle();
+  // ref_theta = processIMUAngle();
   motor_theta = readMotorAngle();
 
   deltaT = (newTime - oldTime) * 1000;
@@ -164,7 +165,7 @@ float PI_Control(){
 void Compensate()
 {
 
-  float comp = 1 * PI_Control();
+  float comp = -1 * PI_Control();
 
 
 
