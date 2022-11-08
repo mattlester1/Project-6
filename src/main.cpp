@@ -59,7 +59,7 @@ void setup()
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
 
   // set filter bandwidth to 21 Hz
-  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  mpu.setFilterBandwidth(MPU6050_BAND_5_HZ);
 
   delay(100);
 }
