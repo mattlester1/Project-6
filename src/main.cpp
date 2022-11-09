@@ -66,11 +66,8 @@ void setup()
 
 void loop()
 {
-  Serial.println(processIMUAngle());
-  Serial.println(readMotorAngle());
-
-  Compensate(PI_Control(processIMUAngle(), readMotorAngle()), PowerControl());
-  // processIMU();
+  // Compensate(PI_Control(processIMUAngle(), readMotorAngle()), PowerControl());
+  processIMU();
 
 }
 
@@ -97,7 +94,7 @@ void processIMU()
   Serial.print(g.gyro.z);
   Serial.println(" rad/s");
 
-  // Serial.println(a.acceleration.roll);
+
 
   Serial.print("Temperature: ");
   Serial.print(temp.temperature);
