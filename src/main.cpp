@@ -12,7 +12,6 @@ Encoder encode(30, 31);
 Adafruit_MPU6050 mpu;
 sensors_event_t a, g, temp;
 
-
 const float PPR = 405;
 const int zero_speed = 0;
 const float k_p = 1;
@@ -29,16 +28,13 @@ int deltaT = 0;
 int power = 0;
 
 void processIMU();
+void Compensate(float AngleDifference, float Speed);
 float processIMUAngle();
 float readMotorAngle();
 float PI_Control(float IMUAngle, float MotorAngle);
-void sendPWM();
-void processIMU();
-void Compensate(float AngleDifference, float Speed);
 int PowerControl();
 
-void setup()
-{
+void setup(){
   // put your setup code here, to run once:
   Serial.begin(115200);
 
@@ -64,15 +60,13 @@ void setup()
   delay(100);
 }
 
-void loop()
-{
-  // Compensate(PI_Control(processIMUAngle(), readMotorAngle()), PowerControl());
-  processIMU();
+void loop(){
+  Compensate(PI_Control(processIMUAngle(), readMotorAngle()), PowerControl());
+  // processIMU();
 
 }
 
-void processIMU()
-{
+void processIMU(){
   /* Get new sensor events with the readings */
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
@@ -94,8 +88,6 @@ void processIMU()
   Serial.print(g.gyro.z);
   Serial.println(" rad/s");
 
-
-
   Serial.print("Temperature: ");
   Serial.print(temp.temperature);
   Serial.println(" degC");
@@ -104,45 +96,32 @@ void processIMU()
   delay(500);
 }
 
-float processIMUAngle()
-{
+// reads IMU info and returns angle of breadboard about the Y-axis
+float processIMUAngle(){
 
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
   float angleOffSet = 0;
 
   return ((180 / M_PI) * atan2(a.acceleration.x, a.acceleration.z)) + angleOffSet;
-  
 }
 
-/**
- * @brief reads motor encoder to determine the angle of motor shaft
- * 
- * @returns float 
- */
+// reads motor encoder to determine the angle of motor shaft
+float readMotorAngle(){
 
-float readMotorAngle()
-{
   return (encode.read() / PPR) * 360;
 }
 
-/**
-// @brief Includes proportional and Integral control
-// Proportional control simply takes the difference between the IMU angle and motor angle and 
-// multiplies by Proportional constant k_p
-// Integral control finds the difference between the old registerd angled difference (oldError)  
-// and the new angle difference (thetaError) and multiplies that difference by the change in time
-// this is then summed with the previous i_control value and mulitplied by the intergral constant k_i
-// @returns p_control + i_control
-*/
 
+// Includes proportional and Integral control
 float PI_Control(float IMUAngle, float MotorAngle){
+
   newTime = millis();
   ref_theta = IMUAngle;
   motor_theta = MotorAngle;
 
   thetaError = ref_theta + motor_theta;
-  p_control = k_p * thetaError; // Seems to be working, creates occelations, may need refinment
+  p_control = k_p * thetaError; 
 
   oldTime = newTime;
   oldError = thetaError;
@@ -151,22 +130,16 @@ float PI_Control(float IMUAngle, float MotorAngle){
   ref_theta = IMUAngle;
   motor_theta = MotorAngle;
 
-  deltaT = (newTime - oldTime) * 1000;
+  deltaT = (newTime - oldTime) * (1/1000); // time difference and converting from milliseconds to seconds
   thetaError = ref_theta + motor_theta;
   i_control = k_i * (i_control + ((thetaError - oldError) * deltaT));
+
   return p_control + i_control;
-
-
 }
 
 
-
-/**
 // Takes results from PI_Control() and PowerControl() and applies them to motor
-*/
-
-void Compensate(float AngleDifference, float Speed)
-{
+void Compensate(float AngleDifference, float Speed){
 
   float comp = AngleDifference;
 
@@ -188,14 +161,10 @@ void Compensate(float AngleDifference, float Speed)
   }
 
 
-
-/**
   // controls power output depending on angle difference. 
   //The greater the difference the the greater the power
-  // @returns power
-*/  
-  
   int PowerControl(){
+
     float angleError = PI_Control(processIMUAngle(), readMotorAngle());
 
     if (abs(angleError) < 5){
@@ -213,32 +182,6 @@ void Compensate(float AngleDifference, float Speed)
     else{
       power = 255;
     }
+
     return power;
   }
-
-
-
-  // while ((abs(IMUAngle - motorAngle)) > 0.5)
-  // {
-
-
-
-
-  //   // if (refAngle < 0)
-  //   // {
-  //   //   analogWrite(Motor_Pin1, 255);
-  //   //   analogWrite(Motor_Pin2, 0);
-  //   //   // motorAngle = encoderAngle;
-  //   // }
-  //   // else
-  //   // {
-  //   //   analogWrite(Motor_Pin1, 0);
-  //   //   analogWrite(Motor_Pin2, 255);
-  //   //   // motorAngle = encoderAngle;
-  //   // }
-
-  //   // analogWrite(Motor_Pin1, 0);
-  //   // analogWrite(Motor_Pin2, 0);
-  //   // encoderAngle;
-  // }
-// }
